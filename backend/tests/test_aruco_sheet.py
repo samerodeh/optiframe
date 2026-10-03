@@ -51,7 +51,8 @@ def photograph(page: np.ndarray, seed: int = 0) -> Image.Image:
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
 def test_sheet_calibration_four_markers(seed):
-    result = calibrate_sheet(photograph(render_sheet(), seed))
+    # Synthetic sheet renders nominal 40 mm markers: pass the size explicitly.
+    result = calibrate_sheet(photograph(render_sheet(), seed), marker_mm=40.0)
     assert isinstance(result, SheetReady), result
     assert result.markers == [0, 1, 2, 3]
     assert result.millimetres_per_pixel == pytest.approx(0.2, rel=0.05)
@@ -71,7 +72,7 @@ def test_sheet_calibration_four_markers(seed):
 
 
 def test_sheet_ruler_measures_100mm_in_warped_preview():
-    result = calibrate_sheet(photograph(render_sheet(), 0))
+    result = calibrate_sheet(photograph(render_sheet(), 0), marker_mm=40.0)
     assert isinstance(result, SheetReady)
     to_mm = np.asarray(result.source_to_sheet_mm)
     to_px = np.linalg.inv(np.asarray(result.source_to_sheet_mm))
@@ -86,3 +87,16 @@ def test_sheet_missing_markers_retries():
     blank = Image.new("RGB", (800, 1000), (240,) * 3)
     result = calibrate_sheet(blank)
     assert result.status == "retry" and result.reason == "markers_missing"
+
+
+def test_measured_marker_size_scales_output():
+    # Same photo, nominal 40 vs measured 37.2 print: millimetres per pixel
+    # must scale by exactly 37.2/40, or lens dimensions overestimate ~7.5%.
+    photo = photograph(render_sheet(), 0)
+    nominal = calibrate_sheet(photo, marker_mm=40.0)
+    measured = calibrate_sheet(photo, marker_mm=37.2)
+    assert isinstance(nominal, SheetReady) and isinstance(measured, SheetReady)
+    assert measured.millimetres_per_pixel == pytest.approx(
+        nominal.millimetres_per_pixel * 37.2 / 40.0, rel=0.01)
+    assert measured.ruler_length_mm == pytest.approx(93.0, abs=1.5)
+    assert measured.print_scale_ok is True

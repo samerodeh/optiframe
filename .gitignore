@@ -10,4 +10,8 @@ __pycache__/
 .env
 .pytest_cache/
 backend/ml/*.pt
+backend/ml/**/*.pt
+backend/ml/runs/
+backend/ml/data/sheet/batch_*/originals/
+backend/ml/data/sheet/batch_*/photos/
 ml/smoke*.onnx

@@ -17,6 +17,7 @@ pipeline on the sheet-rectified image, then corrected where the overlay disagree
 from __future__ import annotations
 
 import csv
+import json
 import pathlib
 
 import numpy as np
@@ -38,17 +39,77 @@ def load_manifest(manifest: pathlib.Path | None = None) -> list[dict]:
         records.append({
             "filename": row["filename"],
             "lens_id": row["lens_id"],
-            "width_a_mm": float(row["width_a_mm"]),
-            "height_b_mm": float(row["height_b_mm"]),
+            "width_a_mm": float(row["width_a_mm"]) if row.get("width_a_mm", "").strip() else None,
+            "height_b_mm": float(row["height_b_mm"]) if row.get("height_b_mm", "").strip() else None,
             "nasal": row.get("nasal", ""),
             "notes": row.get("notes", ""),
         })
     return records
 
 
-def load_pair(record: dict) -> tuple[np.ndarray, np.ndarray]:
-    img = np.asarray(Image.open(DATA_DIR / "photos" / record["filename"]).convert("RGB"))
-    mask = np.asarray(Image.open(DATA_DIR / "masks" / (pathlib.Path(record["filename"]).stem + ".png")).convert("L"))
+def explicit_split(records: list[dict], path: pathlib.Path):
+    """Predeclared capture-group experiment; does not claim unseen-lens accuracy."""
+    spec = json.loads(path.read_text(encoding="utf-8"))
+    names = [name for split in ("train", "validation", "test") for name in spec[split]]
+    available = {r["filename"]: r for r in records}
+    if len(names) != len(set(names)) or len(available) != len(records):
+        raise ValueError("Duplicate photo across split or manifest")
+    if set(names) != set(available):
+        raise ValueError("Split must include every manifest photo exactly once")
+    if any(not spec[split] for split in ("train", "validation", "test")):
+        raise ValueError("Train, validation and test splits must all be nonempty")
+    if spec.get("unit") != "capture_group" or not spec.get("limitation"):
+        raise ValueError("Explicit split must document capture-group scope and limitation")
+    groups = spec.get("groups", {})
+    if set(groups) != set(available):
+        raise ValueError("Every photo needs a capture group")
+    owner = {}
+    for split in ("train", "validation", "test"):
+        for name in spec[split]:
+            group = groups[name]
+            if group in owner and owner[group] != split:
+                raise ValueError("Capture group crosses split boundaries")
+            owner[group] = split
+    return tuple([available[name] for name in spec[split]] for split in ("train", "validation", "test"))
+
+
+def load_pair(record: dict, data_dir: pathlib.Path = DATA_DIR) -> tuple[np.ndarray, np.ndarray]:
+    with Image.open(data_dir / "photos" / record["filename"]) as opened:
+        img = np.asarray(opened.convert("RGB"))
+    with Image.open(data_dir / "masks" / (pathlib.Path(record["filename"]).stem + ".png")) as opened:
+        mask = np.asarray(opened.convert("L"))
     mask = (mask > 127).astype(np.uint8) * 255
-    assert img.shape[:2] == mask.shape, f"mask size mismatch for {record['filename']}"
+    if img.shape[:2] != mask.shape:
+        raise ValueError(f"mask size mismatch for {record['filename']}")
+    if not np.any(mask):
+        raise ValueError(f"empty lens mask for {record['filename']}")
     return img, mask
+
+
+def crop_pair(img: np.ndarray, mask: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Supervised ROI approximation using the same 40% padding as inference.
+
+    These are label-anchored crops, not evidence that runtime candidate discovery
+    succeeds. End-to-end evaluation must separately exercise candidate discovery.
+    """
+    ys, xs = np.nonzero(mask)
+    if not len(xs):
+        raise ValueError("Cannot crop an empty lens mask")
+    x, y = int(xs.min()), int(ys.min())
+    width, height = int(xs.max()) - x + 1, int(ys.max()) - y + 1
+    padding = int(max(width, height) * .4)
+    x0, y0 = max(0, x - padding), max(0, y - padding)
+    x1, y1 = min(img.shape[1], x + width + padding), min(img.shape[0], y + height + padding)
+    return img[y0:y1, x0:x1].copy(), mask[y0:y1, x0:x1].copy()
+
+
+def split_by_lens(records: list[dict], seed: int = 42) -> tuple[list[dict], list[dict]]:
+    """Hold out whole physical lenses so repeat photos cannot leak across splits."""
+    lenses = sorted({record["lens_id"] for record in records})
+    if len(lenses) < 2 or any(not lens.strip() for lens in lenses):
+        raise ValueError("Training needs at least two named lens IDs for a held-out validation split")
+    rng = np.random.default_rng(seed)
+    rng.shuffle(lenses)
+    validation_ids = set(lenses[:max(1, round(len(lenses) * .25))])
+    return ([r for r in records if r["lens_id"] not in validation_ids],
+            [r for r in records if r["lens_id"] in validation_ids])

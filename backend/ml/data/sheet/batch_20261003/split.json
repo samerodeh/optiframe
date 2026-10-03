@@ -1,0 +1,50 @@
+{
+  "unit": "capture_group",
+  "limitation": "Physical lens IDs unconfirmed; same lens may appear in all splits. Measures capture variation only, not generalization to unseen lenses. Nearby captures grouped; dark-table photos held out. Masks are reviewed OpenCV pseudo-labels, not independent ground truth.",
+  "train": [
+    "16227.png",
+    "16228.png",
+    "16229.png",
+    "16230.png",
+    "16243.png",
+    "16244.png",
+    "16245.png",
+    "16246.png",
+    "16249.png",
+    "16250.png",
+    "16251.png",
+    "16253.png"
+  ],
+  "validation": [
+    "16232.png",
+    "16233.png",
+    "16234.png"
+  ],
+  "test": [
+    "16240.png",
+    "16254.png",
+    "16256.png",
+    "16258.png"
+  ],
+  "groups": {
+    "16227.png": "first_overhead",
+    "16228.png": "first_overhead",
+    "16229.png": "first_overhead",
+    "16230.png": "first_overhead",
+    "16243.png": "second_overhead",
+    "16244.png": "second_overhead",
+    "16245.png": "second_overhead",
+    "16246.png": "second_overhead",
+    "16249.png": "angled_table",
+    "16250.png": "angled_table",
+    "16251.png": "angled_table",
+    "16253.png": "angled_table",
+    "16232.png": "rotated_sheet",
+    "16233.png": "rotated_sheet",
+    "16234.png": "rotated_sheet",
+    "16240.png": "dark_table",
+    "16254.png": "dark_table",
+    "16256.png": "dark_table",
+    "16258.png": "dark_table"
+  }
+}

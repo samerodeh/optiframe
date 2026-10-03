@@ -1,0 +1,833 @@
+[
+  {
+    "source": "16227.jpg",
+    "sha256": "4cd4d3c54052af0d4c12c01cef78b376d7b136319263dd34778d39cb1d319c7c",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2199239581823349,
+    "corner_max_mm": 0.5677980184555054,
+    "draft_bounds_mm": [
+      34.4,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.12189996439890957,
+        -0.0007841049210265276,
+        165.0127740871244
+      ],
+      [
+        0.0005141138245426692,
+        -0.12404978448513443,
+        240.59723081722308
+      ],
+      [
+        7.656756856881197e-06,
+        -2.0471590949469614e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16228.jpg",
+    "sha256": "51c4cf6d7d4bf40ce268cd7b34d3d0a71e33fa1832372b48240d25f90a741ed0",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.19655166566371918,
+    "corner_max_mm": 0.3333241641521454,
+    "draft_bounds_mm": [
+      34.4,
+      50.6
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.18954559257570633,
+        0.0018750724423073927,
+        208.56537554522887
+      ],
+      [
+        0.00104083345448551,
+        -0.18767204473325025,
+        319.3370294863281
+      ],
+      [
+        1.6562599687074465e-05,
+        1.6202105132622787e-05,
+        0.9999999999999999
+      ]
+    ]
+  },
+  {
+    "source": "16229.jpg",
+    "sha256": "ac8293aa4bcb215f2a6d73f6abca0a4811f2636288cb7e3e15c226e77059559d",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2045031487941742,
+    "corner_max_mm": 0.43460214138031006,
+    "draft_bounds_mm": [
+      34.8,
+      51.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.11846919229653746,
+        0.0004208394158977869,
+        152.14580391725937
+      ],
+      [
+        0.0005736653865537529,
+        -0.11914342026885735,
+        236.62019564146533
+      ],
+      [
+        1.0592461986156051e-05,
+        -6.044776847833019e-06,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16230.jpg",
+    "sha256": "05b15872ee2d61534ab0adc6c5071393dad32318bc7dd6c868e6b65019ce4bd4",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2111949473619461,
+    "corner_max_mm": 0.33388906717300415,
+    "draft_bounds_mm": [
+      35.2,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1719028090655515,
+        0.004024820121724701,
+        191.70699756681861
+      ],
+      [
+        -0.0013742607262586296,
+        -0.16787907082690834,
+        285.9724362426747
+      ],
+      [
+        4.62595099072236e-06,
+        3.732534172202209e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16231.jpg",
+    "sha256": "2aa56cf8ace4b4e511f759232a808e365ae3af36942e24b78a70713f56440ddf",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2008548080921173,
+    "corner_max_mm": 0.410483717918396,
+    "error": "No reliable closed contour for draft label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1252960865486534,
+        0.0006512526933141599,
+        167.5652167481723
+      ],
+      [
+        0.0014711598433128123,
+        -0.12265626575288964,
+        235.30970322092853
+      ],
+      [
+        4.70741891538154e-06,
+        2.4680830703298935e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16232.jpg",
+    "sha256": "a8211505baf38b91273ce2fe9f8212312c45da9461a007f11a81aab07752c198",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2017541378736496,
+    "corner_max_mm": 0.4535875916481018,
+    "draft_bounds_mm": [
+      35.0,
+      51.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        0.11531771447963103,
+        0.002171687017896571,
+        -61.65694439106344
+      ],
+      [
+        -0.015394918770385367,
+        0.1150611546595019,
+        -33.56188301734049
+      ],
+      [
+        -0.0001446301569163183,
+        -1.994426550928362e-05,
+        0.9999999999999999
+      ]
+    ]
+  },
+  {
+    "source": "16233.jpg",
+    "sha256": "ef51a59e3af265a400e3642017c77fdcdb65f02682d14016466570b4f9de7cc0",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.23803013563156128,
+    "corner_max_mm": 0.47571179270744324,
+    "draft_bounds_mm": [
+      35.0,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        0.11508337216035082,
+        0.0004795774689765751,
+        -57.55062674061927
+      ],
+      [
+        -0.017572446141785224,
+        0.11568746248560766,
+        -34.084741059314965
+      ],
+      [
+        -0.00018649693245687183,
+        -9.496841688143086e-06,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16234.jpg",
+    "sha256": "7928af6f18ce22f97385c253c42693a1377cad48b9834045d2453a8a2e85a690",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.25132986903190613,
+    "corner_max_mm": 0.4929608404636383,
+    "draft_bounds_mm": [
+      35.2,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        0.11247411845357001,
+        -0.001146669631440345,
+        -58.59675327451818
+      ],
+      [
+        -0.018508648370389777,
+        0.11190224465626458,
+        -27.705828671954546
+      ],
+      [
+        -0.00020786479158375263,
+        -6.386513626593396e-06,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16240.jpg",
+    "sha256": "46cde06141f76766dac1dde3a5f1136dc2bff1d6d6606687427912038b78b52a",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.5664898157119751,
+    "corner_max_mm": 1.0141003131866455,
+    "draft_bounds_mm": [
+      34.8,
+      50.2
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1752180136033508,
+        0.0032825772375387786,
+        213.50105200422774
+      ],
+      [
+        0.005646996699664066,
+        -0.16787759544389885,
+        277.2817894543254
+      ],
+      [
+        2.7054188883077225e-05,
+        0.00011777299879275873,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16241.jpg",
+    "sha256": "cf02631c66f1167286684072c7098b3e5427b3e97078820008f111ae472f7302",
+    "runtime_calibration_status": "retry",
+    "runtime_calibration_reason": "low_confidence",
+    "error": "Sheet layout differs from uniform PDF scaling: 1.64 mm residual",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ]
+  },
+  {
+    "source": "16243.jpg",
+    "sha256": "8dbb4ff8631f61905f0f27fe932d02271acf292fadde8a569bce05ce1ae6e5cd",
+    "runtime_calibration_status": "retry",
+    "runtime_calibration_reason": "markers_cropped",
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2379763424396515,
+    "corner_max_mm": 0.4561223089694977,
+    "draft_bounds_mm": [
+      35.0,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1192997067407958,
+        -4.446761682633591e-05,
+        165.84819656805007
+      ],
+      [
+        0.001238940826457918,
+        -0.11919267225021468,
+        233.18334953400867
+      ],
+      [
+        9.334727556370438e-06,
+        1.0326330859387793e-08,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16244.jpg",
+    "sha256": "8f62d8b13687f979819d8bd5ce3a1a98b858c2cc5ab8ec3d5a9741a65d04e10f",
+    "runtime_calibration_status": "retry",
+    "runtime_calibration_reason": "markers_cropped",
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.25866231322288513,
+    "corner_max_mm": 0.49536699056625366,
+    "draft_bounds_mm": [
+      35.0,
+      51.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.11739371401326425,
+        0.0004897423723483088,
+        169.44466186460525
+      ],
+      [
+        0.0015396710053494013,
+        -0.11653915179995766,
+        232.88789301620423
+      ],
+      [
+        1.0604618204988114e-05,
+        1.0476174581302307e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16245.jpg",
+    "sha256": "b0791b85dcc2ff0a075d43dc570f9f11498d547bff4c52f10bb52bcb0a1fabaa",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2130262404680252,
+    "corner_max_mm": 0.46278122067451477,
+    "draft_bounds_mm": [
+      34.8,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.16807084852303075,
+        0.0027953649838900305,
+        201.62988005748065
+      ],
+      [
+        -0.0005321178222050734,
+        -0.16269794686989023,
+        291.5282217895747
+      ],
+      [
+        -5.1305287997790766e-06,
+        4.084574874860015e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16246.jpg",
+    "sha256": "f016a4e9b332f50838857b5488cd282abb134bbc1d1487c4bc5d17f21b6bc1af",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.175561785697937,
+    "corner_max_mm": 0.38726553320884705,
+    "draft_bounds_mm": [
+      36.2,
+      49.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.15398205421989966,
+        0.0018532803569837704,
+        182.795115496365
+      ],
+      [
+        -0.0015832946943208305,
+        -0.15378698915454306,
+        286.8233169024195
+      ],
+      [
+        1.323762277024632e-06,
+        -4.629103308941321e-06,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16249.jpg",
+    "sha256": "71ebd178f699a1c49c2c4d1272d39302402c79956b3e6e845ebd45e7c20ecf47",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.23875710368156433,
+    "corner_max_mm": 0.6091188788414001,
+    "draft_bounds_mm": [
+      35.0,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.13888074234353706,
+        0.0008790268459527837,
+        164.39816672764837
+      ],
+      [
+        0.018834349066518832,
+        -0.14506477994622047,
+        264.48508100603624
+      ],
+      [
+        0.00018209479751969926,
+        -2.864778654074632e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16250.jpg",
+    "sha256": "1f38096ae7f10ffcdc147a23bc246f1df7ee44ac0845fbf6b91d7367354f1143",
+    "runtime_calibration_status": "retry",
+    "runtime_calibration_reason": "markers_cropped",
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.2481854259967804,
+    "corner_max_mm": 0.649577260017395,
+    "draft_bounds_mm": [
+      35.4,
+      51.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1510265501872915,
+        0.00578403536296829,
+        161.95986017061
+      ],
+      [
+        0.02284293434971265,
+        -0.15281263450315075,
+        277.9656209477834
+      ],
+      [
+        0.00026003837490034165,
+        -1.2036956479977374e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16251.jpg",
+    "sha256": "eecb7feefa462870cbc42091c00511b8e3b9781aef0632ce8311b78f508d5c30",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.3155022859573364,
+    "corner_max_mm": 0.9046523571014404,
+    "draft_bounds_mm": [
+      41.2,
+      47.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.17139109621715323,
+        0.018913160632879792,
+        165.1712074236209
+      ],
+      [
+        0.021282449332948695,
+        -0.16951538979441386,
+        309.9741871332564
+      ],
+      [
+        0.00036759795216374097,
+        -1.6606463785456918e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16253.jpg",
+    "sha256": "b748f96ffdefea3b06ca644b1dfd1c29a86d7b97036ccaeefe51933dd97d9f9a",
+    "runtime_calibration_status": "retry",
+    "runtime_calibration_reason": "markers_cropped",
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.22273187339305878,
+    "corner_max_mm": 0.5982589721679688,
+    "draft_bounds_mm": [
+      35.4,
+      50.8
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.13102127343922523,
+        0.006974152807222622,
+        148.29402101769332
+      ],
+      [
+        0.007083136689041066,
+        -0.13905130210835767,
+        269.55018749531126
+      ],
+      [
+        0.00012415307584149557,
+        -4.19361844750723e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16254.jpg",
+    "sha256": "644ad6fccd235449536617964a2ce450cd11c08076232b04ac3af54d3be8674a",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.4466349482536316,
+    "corner_max_mm": 0.7973779439926147,
+    "draft_bounds_mm": [
+      34.6,
+      50.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.13056811526437953,
+        0.0021410891609370338,
+        163.45618396325105
+      ],
+      [
+        0.00013527544799521536,
+        -0.13693815462856593,
+        256.6090440553834
+      ],
+      [
+        4.184853695781095e-05,
+        -4.344665969223629e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16256.jpg",
+    "sha256": "0521b53ee5544a58659f6fdc0b6ff5cab9ea6009275c4e24e88216d981d37669",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.5676376819610596,
+    "corner_max_mm": 1.1285158395767212,
+    "draft_bounds_mm": [
+      35.2,
+      51.0
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.15927061216853863,
+        0.006733724386566322,
+        177.71270409608775
+      ],
+      [
+        0.003697045680866678,
+        -0.16325704883015593,
+        301.70257264770424
+      ],
+      [
+        9.461871819691682e-05,
+        -1.3221452298996258e-05,
+        1.0
+      ]
+    ]
+  },
+  {
+    "source": "16258.jpg",
+    "sha256": "180b1613ea35f59bd07e31a68c6c0f46922200eb1b0c33bbb3bb4d494999e157",
+    "runtime_calibration_status": "calibrated",
+    "runtime_calibration_reason": null,
+    "marker_mm": 37.2,
+    "mm_per_pixel": 0.2,
+    "uniform_layout_scale": 0.93,
+    "corner_rms_mm": 0.3713286519050598,
+    "corner_max_mm": 0.6259310841560364,
+    "draft_bounds_mm": [
+      35.0,
+      51.2
+    ],
+    "label_status": "agent_visually_reviewed_pseudo_label",
+    "original_oriented_size_px": [
+      3000,
+      4000
+    ],
+    "processed_photo_size_px": [
+      1650,
+      2200
+    ],
+    "processed_photo_to_mm": [
+      [
+        -0.1172668478105275,
+        -0.0028711004080089458,
+        168.41234419318943
+      ],
+      [
+        -0.000485234668602735,
+        -0.1201784688006167,
+        242.39727556152553
+      ],
+      [
+        -5.846864685579239e-06,
+        -3.3180137377391334e-05,
+        1.0
+      ]
+    ]
+  }
+]

@@ -75,6 +75,14 @@ Open `http://localhost:5173`. Vite forwards `/api` to FastAPI on port 8765. Prod
 
 ## Verification
 
+The local real-photo training pilot and its limitations are documented in
+[`backend/ml/README.md`](backend/ml/README.md). The supplied October 3 photos use
+user-measured **37.2 mm markers**, not the PDF's nominal 40 mm. Training preparation
+uses the measured size and checks the uniformly scaled layout. Raw photos and
+experimental weights stay local; candidate training does not deploy a new model.
+Segmentation agreement with reviewed pseudo-labels is separate from physical
+millimetre accuracy, which still needs independent measurements.
+
 ```powershell
 cd backend
 .venv\Scripts\python.exe -m pytest -q

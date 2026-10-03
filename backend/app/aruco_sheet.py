@@ -20,9 +20,13 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel
 
-MARKER_SIZE_MM = 40.0
+NOMINAL_MARKER_MM = 40.0
+# Physical side of the printed markers, measured by the user 2026-10-03.
+# The PDF designs 40 mm; this print came out at 37.2 (uniform 0.93 scale).
+# Update this if the sheet is reprinted; the batch pipeline takes the same
+# value as --marker-mm. Never assume 40 without measuring the print.
+MEASURED_MARKER_MM = 37.2
 MARKER_IDS = (0, 1, 2, 3)
-HALF = MARKER_SIZE_MM / 2
 MAX_PREVIEW_SIDE = 1600
 
 MARKER_CENTERS_MM: dict[int, tuple[float, float]] = {
@@ -70,23 +74,32 @@ def retry(reason: str) -> SheetRetry:
 
 
 def _sheet_corners(marker_id: int) -> np.ndarray:
+    """Nominal-design corners of one marker (40 mm sides, origin at ID 0 center).
+
+    Nominal only: callers scale by measured/40 for a real print (see
+    calibrate_sheet; ml/prepare_photo_batch.py does the same).
+    """
+    half = NOMINAL_MARKER_MM / 2
     cx, cy = MARKER_CENTERS_MM[marker_id]
     return np.float32([
-        [cx - HALF, cy - HALF], [cx + HALF, cy - HALF],
-        [cx + HALF, cy + HALF], [cx - HALF, cy + HALF],
+        [cx - half, cy - half], [cx + half, cy - half],
+        [cx + half, cy + half], [cx - half, cy + half],
     ])
 
 
-def _verify_ruler(preview: np.ndarray, ppm: float) -> tuple[float | None, bool | None]:
-    """Measure the printed 100 mm check ruler in the warped preview.
+def _verify_ruler(preview: np.ndarray, ppm: float, expected_mm: float = 100.0,
+                  ruler_y_mm: float = 180.0, bounds_y0_mm: float = -35.0
+                  ) -> tuple[float | None, bool | None]:
+    """Measure the printed check ruler in the warped preview.
 
     Advisory only: returns (length_mm, within_tolerance) or (None, None) when
     the ruler is not found. Never blocks calibration; the frontend warns.
-    Fit-to-page misprints (typically 3-6% off) far exceed the 1 mm tolerance.
+    expected_mm follows the measured print scale (e.g. 93 for a 37.2 mm
+    marker print); a fit-to-page misprint far exceeds the 1 mm tolerance.
     """
     gray = cv2.cvtColor(preview, cv2.COLOR_RGB2GRAY)
     band_half = int(8 * ppm)
-    yc = int((RULER_MM[0][1] - SHEET_BOUNDS_MM[0][1]) * ppm)
+    yc = int((ruler_y_mm - bounds_y0_mm) * ppm)
     y0, y1 = max(yc - band_half, 0), min(yc + band_half, gray.shape[0])
     band = gray[y0:y1]
     if band.shape[0] < 8:
@@ -105,10 +118,19 @@ def _verify_ruler(preview: np.ndarray, ppm: float) -> tuple[float | None, bool |
     if best_len <= 0:
         return None, None
     length = round(float(best_len), 2)
-    return length, abs(length - 100.0) <= 1.0
+    return length, abs(length - expected_mm) <= 1.0
 
 
-def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
+def calibrate_sheet(image: Image.Image,
+                    marker_mm: float = MEASURED_MARKER_MM) -> SheetReady | SheetRetry:
+    """Calibrate from sheet markers of measured physical side `marker_mm`.
+
+    The nominal PDF layout is assumed uniformly scaled by marker_mm/40;
+    corner reprojection enforces that assumption.
+    """
+    if not np.isfinite(marker_mm) or marker_mm <= 0:
+        return retry("low_confidence")
+    ratio = marker_mm / NOMINAL_MARKER_MM
     width, height = image.size
     rgb = np.asarray(image.convert("RGB"))
     gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
@@ -138,7 +160,7 @@ def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
         found.append(marker_id)
         quads.append(q)
         src_pts.append(q)
-        dst_pts.append(_sheet_corners(marker_id))
+        dst_pts.append(_sheet_corners(marker_id) * ratio)
     if not found:
         return retry("markers_missing")
 
@@ -175,11 +197,10 @@ def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
     if not contrasts or float(np.percentile(contrasts, 25)) < 30:
         return retry("image_blurry")
 
-    (x0, y0), (x1, y1) = SHEET_BOUNDS_MM
-    corners_sheet = np.float32([[[x0, y0], [x1, y0], [x1, y1], [x0, y1]]])
+    (x0, y0), (x1, y1) = (np.array(SHEET_BOUNDS_MM) * ratio).tolist()
     span = np.array([x1 - x0, y1 - y0])
     ppm = min((MAX_PREVIEW_SIDE - 1) / span.max(),
-              float(np.linalg.norm(src[1] - src[0]) / MARKER_SIZE_MM))
+              float(np.linalg.norm(src[1] - src[0]) / marker_mm))
     if not np.isfinite(ppm) or ppm < 1:
         return retry("low_confidence")
     canvas = np.array([[ppm, 0, -x0 * ppm], [0, ppm, -y0 * ppm], [0, 0, 1]])
@@ -188,12 +209,12 @@ def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
     size = tuple(np.ceil(span * ppm).astype(int) + 1)
     preview = cv2.warpPerspective(rgb, to_px, size, flags=cv2.INTER_LINEAR,
                                   borderValue=(235, 239, 235))
-    ruler_length_mm, print_scale_ok = _verify_ruler(preview, ppm)
+    ruler_length_mm, print_scale_ok = _verify_ruler(
+        preview, ppm, 100.0 * ratio, RULER_MM[0][1] * ratio, y0)
     zone = cv2.perspectiveTransform(
-        np.float32([[[LENS_ZONE_MM[0][0], LENS_ZONE_MM[0][1]],
-                      [LENS_ZONE_MM[1][0], LENS_ZONE_MM[0][1]],
-                      [LENS_ZONE_MM[1][0], LENS_ZONE_MM[1][1]],
-                      [LENS_ZONE_MM[0][0], LENS_ZONE_MM[1][1]]]]), canvas)[0]
+        (np.float32([[LENS_ZONE_MM[0], (LENS_ZONE_MM[1][0], LENS_ZONE_MM[0][1]),
+                       LENS_ZONE_MM[1], (LENS_ZONE_MM[0][0], LENS_ZONE_MM[1][1])]]) * ratio),
+        canvas)[0]
     cv2.polylines(preview, [zone.astype(np.int32)], True, (46, 160, 67), max(2, size[0] // 400))
     ok, encoded = cv2.imencode(".jpg", cv2.cvtColor(preview, cv2.COLOR_RGB2BGR),
                                [cv2.IMWRITE_JPEG_QUALITY, 82])
