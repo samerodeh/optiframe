@@ -245,29 +245,71 @@ def _finalize(
     )
 
 
+def _ml_rescue(
+    rectified: np.ndarray,
+    calibration: CalibrationReady,
+    capture_mode: Literal["loose", "framed"],
+    candidates: list[Candidate],
+) -> LensMeasurement | None:
+    """Run the UNet on tight crops around deterministic candidates.
+
+    Crops match the training distribution (one dominant lens filling the
+    frame); full scenes do not, so the model never runs on full scenes.
+    Returns the most confident valid ML measurement, or None.
+    """
+    height, width = rectified.shape[:2]
+    best_ml: LensMeasurement | None = None
+    for cand in candidates[:3]:
+        x, y, w, h = cv2.boundingRect(cand.contour)
+        pad = int(max(w, h) * 0.4)
+        x0, y0 = max(x - pad, 0), max(y - pad, 0)
+        x1, y1 = min(x + w + pad, width), min(y + h + pad, height)
+        if x1 - x0 < 32 or y1 - y0 < 32:
+            continue
+        result = ml_segment.predict_contour(rectified[y0:y1, x0:x1])
+        if result is None:
+            continue
+        contour_crop, ml_conf = result
+        contour_preview = contour_crop.reshape(-1, 1, 2).astype(np.float32)
+        contour_preview[:, :, 0] += x0
+        contour_preview[:, :, 1] += y0
+        finalized = _finalize(contour_preview, calibration, capture_mode, ml_conf, ml=True)
+        if not isinstance(finalized, LensMeasurement):
+            continue
+        # The deterministic candidate anchors the result: ML refines, never
+        # reinvents. Reject masks that disagree with the ROI source size.
+        anchor = np.asarray(cand.size, dtype=float)
+        got = np.array([finalized.width_a_mm, finalized.height_b_mm])
+        if np.any(np.abs(got - anchor) / np.maximum(anchor, 1e-6) > 0.25):
+            continue
+        if best_ml is None or finalized.confidence > best_ml.confidence:
+            best_ml = finalized
+    return best_ml
+
+
 def measure_lens(
     image: Image.Image,
     calibration: CalibrationReady,
     capture_mode: Literal["loose", "framed"],
 ) -> LensMeasurement | MeasurementRetry:
     rectified = _rectify(image, calibration)
-    # Primary: trained ML mask. Falls through to deterministic on any failure.
-    if ml_segment.available():
-        ml_result = ml_segment.predict_contour(rectified)
-        if ml_result is not None:
-            contour_px, ml_conf = ml_result
-            finalized = _finalize(contour_px, calibration, capture_mode, ml_conf, ml=True)
-            if isinstance(finalized, LensMeasurement):
-                return finalized
     candidates, cropped = _candidate_contours(rectified, calibration)
     if not candidates:
         return retry("lens_cropped" if cropped else "lens_missing")
     best = candidates[0]
+    # Deterministic success stays primary; ML rescues weak-edge rejects.
+    if best.sharpness >= 35 and best.score >= .48 and not (
+        len(candidates) > 1 and candidates[1].score >= best.score * .82
+    ):
+        return _finalize(best.contour, calibration, capture_mode, best.score, ml=False)
+    if ml_segment.available() and not (
+        len(candidates) > 1 and candidates[1].score >= best.score * .82
+    ):
+        rescued = _ml_rescue(rectified, calibration, capture_mode, candidates)
+        if rescued is not None:
+            return rescued
     if best.sharpness < 35:
         return retry("lens_blurry")
     if best.score < .48:
         return retry("low_confidence")
-    if len(candidates) > 1 and candidates[1].score >= best.score * .82:
-        return retry("ambiguous_contour")
-
-    return _finalize(best.contour, calibration, capture_mode, best.score, ml=False)
+    return retry("ambiguous_contour")

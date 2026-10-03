@@ -57,11 +57,15 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--out", type=str, default="ml/lens_unet.onnx")
+    ap.add_argument("--init", type=str, default="")
     args = ap.parse_args()
 
     device = torch.device("cpu")
     model = TinyUNet().to(device)
-    print(f"params: {count_params(model)}")
+    print(f"params: {count_params(model)}", flush=True)
+    if args.init:
+        model.load_state_dict(torch.load(args.init, map_location=device))
+        print(f"resumed from {args.init}", flush=True)
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.epochs)
     loss_fn = nn.BCEWithLogitsLoss()

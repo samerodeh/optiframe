@@ -51,7 +51,10 @@ def sample(seed: int | None = None) -> tuple[np.ndarray, np.ndarray, dict]:
     """Return (rgb 256x256 uint8, mask 256x256 uint8 0/255, meta)."""
     rng = random.Random(seed)
     npr = np.random.default_rng(seed if seed is not None else rng.randint(0, 10**9))
-    bg = rng.randint(200, 245)
+    # Both polarities: light sheet-like backgrounds AND dark surfaces, since
+    # real captures vary and the model must not key on absolute brightness.
+    dark_bg = rng.random() < 0.5
+    bg = rng.randint(30, 90) if dark_bg else rng.randint(200, 245)
     img = np.full((SIZE, SIZE, 3), bg, np.uint8)
     # subtle background texture
     tex = npr.normal(0, rng.uniform(2, 9), (SIZE, SIZE, 1))
@@ -76,9 +79,13 @@ def sample(seed: int | None = None) -> tuple[np.ndarray, np.ndarray, dict]:
     tinted = np.clip(img.astype(int) + tint, 0, 255).astype(np.uint8)
     img[mask > 0] = (0.55 * img[mask > 0] + 0.45 * tinted[mask > 0]).astype(np.uint8)
 
-    # edge: sometimes strong, sometimes faint (transparent lens)
+    # edge: sometimes strong, sometimes faint (transparent lens). On dark
+    # surfaces the rim often reads light (reflection), on light ones dark.
     faint = rng.random() < 0.45
-    edge_color = rng.randint(40, 120) if not faint else rng.randint(150, 200)
+    if dark_bg:
+        edge_color = rng.randint(190, 255) if rng.random() < 0.7 else rng.randint(120, 180)
+    else:
+        edge_color = rng.randint(40, 120) if not faint else rng.randint(150, 200)
     thickness = rng.choice([1, 2, 2, 3])
     cv2.polylines(img, [poly.astype(np.int32)], True,
                   (edge_color,) * 3, thickness, cv2.LINE_AA)

@@ -12,26 +12,40 @@ import pathlib
 import cv2
 import numpy as np
 
-MODEL_PATH = pathlib.Path(__file__).with_name("lens_unet.onnx")
+MODEL_DIR = pathlib.Path(__file__).resolve().parent.parent / "ml"
+# Prefer the sheet fine-tune when present, else the generic base model.
+MODEL_CANDIDATES = (MODEL_DIR / "lens_unet_sheet.onnx", MODEL_DIR / "lens_unet.onnx")
 INPUT_SIZE = 256
 
 _session = None
 _missing = False
 
 
+def _model_path():
+    for candidate in MODEL_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def available() -> bool:
-    return MODEL_PATH.exists()
+    return _model_path() is not None
 
 
 def _session_lazy():
     global _session, _missing
     if _session is not None:
         return _session
-    if _missing or not MODEL_PATH.exists():
+    path = _model_path()
+    if _missing or path is None:
         return None
     try:
         import onnxruntime as ort
-        _session = ort.InferenceSession(str(MODEL_PATH), providers=["CPUExecutionProvider"])
+        opts = ort.SessionOptions()
+        # Keep serverless-sized footprints: no arena pre-allocation growth.
+        opts.add_session_config_entry("arena_extend_strategy", "kSameAsRequested")
+        _session = ort.InferenceSession(str(path), sess_options=opts,
+                                        providers=["CPUExecutionProvider"])
         return _session
     except Exception:
         _missing = True
