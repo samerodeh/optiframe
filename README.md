@@ -10,6 +10,8 @@ This first milestone implements the capture experience:
 - the user confirms that the reference card and target are visible;
 - FastAPI validates the image and returns a capture receipt without storing it.
 
+Uploads are limited to 4 MB so they remain below Vercel Functions' 4.5 MB request-body limit.
+
 Contour detection, metric measurement, model training, SVG export, and STL generation are intentionally reserved for the next milestones.
 
 ## Run locally

@@ -18,7 +18,7 @@ import {
   submitCapture,
 } from "./api";
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 function App() {
   const [captureMode, setCaptureMode] = useState<CaptureMode>("loose");
@@ -51,7 +51,7 @@ function App() {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError("This image is larger than 15 MB. Use the original camera photo at a smaller resolution.");
+      setError("This image is larger than 4 MB. Retake it at a smaller resolution or choose a smaller original.");
       return;
     }
 

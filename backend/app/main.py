@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 register_heif_opener()
 
-MAX_IMAGE_BYTES = 15 * 1024 * 1024
+MAX_IMAGE_BYTES = 4 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg",
     "image/png",
@@ -76,7 +76,7 @@ async def create_capture(
     image_bytes = await image.read(MAX_IMAGE_BYTES + 1)
     await image.close()
     if len(image_bytes) > MAX_IMAGE_BYTES:
-        raise HTTPException(status_code=413, detail="The image must be 15 MB or smaller.")
+        raise HTTPException(status_code=413, detail="The image must be 4 MB or smaller.")
 
     try:
         with Image.open(BytesIO(image_bytes)) as opened_image:
