@@ -34,7 +34,22 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Development requests use FastAPI on port 8765. In production, set `VITE_API_URL` when the API is hosted on another origin; leave it empty when both are served from the same origin.
+Open `http://localhost:5173`. Vite forwards `/api` requests to FastAPI on port 8765.
+
+## Vercel deployment
+
+The repository root contains a `vercel.json` with two services:
+
+- `frontend`: Vite, publicly mounted at `/`;
+- `backend`: FastAPI, publicly mounted at `/api/*`.
+
+The browser calls `/api/captures` on the same origin, so no production environment variable or internal service binding is required. Run all services locally with:
+
+```powershell
+vercel dev
+```
+
+Import the repository root into Vercel using the Services preset. The `/api/(.*)` rewrite must remain before the frontend catch-all rewrite.
 
 ## API
 

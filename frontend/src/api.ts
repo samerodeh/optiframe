@@ -13,8 +13,6 @@ export interface CaptureReceipt {
   next_step: "reference_detection";
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
-
 export async function submitCapture(
   image: File,
   captureMode: CaptureMode,
@@ -25,7 +23,7 @@ export async function submitCapture(
   body.append("capture_mode", captureMode);
   body.append("eye", eye);
 
-  const response = await fetch(`${API_BASE_URL}/api/captures`, {
+  const response = await fetch("/api/captures", {
     method: "POST",
     body,
   });
