@@ -49,6 +49,8 @@ class SheetReady(BaseModel):
     millimetres_per_pixel: float
     source_to_sheet_mm: list[list[float]]
     rectified_zone_corners_px: list[tuple[float, float]]
+    ruler_length_mm: float | None = None
+    print_scale_ok: bool | None = None
     confidence: float
     preview_width_px: int
     preview_height_px: int
@@ -73,6 +75,37 @@ def _sheet_corners(marker_id: int) -> np.ndarray:
         [cx - HALF, cy - HALF], [cx + HALF, cy - HALF],
         [cx + HALF, cy + HALF], [cx - HALF, cy + HALF],
     ])
+
+
+def _verify_ruler(preview: np.ndarray, ppm: float) -> tuple[float | None, bool | None]:
+    """Measure the printed 100 mm check ruler in the warped preview.
+
+    Advisory only: returns (length_mm, within_tolerance) or (None, None) when
+    the ruler is not found. Never blocks calibration; the frontend warns.
+    Fit-to-page misprints (typically 3-6% off) far exceed the 1 mm tolerance.
+    """
+    gray = cv2.cvtColor(preview, cv2.COLOR_RGB2GRAY)
+    band_half = int(8 * ppm)
+    yc = int((RULER_MM[0][1] - SHEET_BOUNDS_MM[0][1]) * ppm)
+    y0, y1 = max(yc - band_half, 0), min(yc + band_half, gray.shape[0])
+    band = gray[y0:y1]
+    if band.shape[0] < 8:
+        return None, None
+    edges = cv2.Canny(band, 40, 120)
+    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=int(30 * ppm / 5),
+                            minLineLength=int(50 * ppm), maxLineGap=int(4 * ppm))
+    if lines is None:
+        return None, None
+    best_len = 0.0
+    for x_a, y_a, x_b, y_c in lines.reshape(-1, 4):
+        dx, dy = abs(float(x_b - x_a)), abs(float(y_c - y_a))
+        if dy > 0.03 * max(dx, 1):
+            continue
+        best_len = max(best_len, dx / ppm)
+    if best_len <= 0:
+        return None, None
+    length = round(float(best_len), 2)
+    return length, abs(length - 100.0) <= 1.0
 
 
 def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
@@ -155,11 +188,12 @@ def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
     size = tuple(np.ceil(span * ppm).astype(int) + 1)
     preview = cv2.warpPerspective(rgb, to_px, size, flags=cv2.INTER_LINEAR,
                                   borderValue=(235, 239, 235))
+    ruler_length_mm, print_scale_ok = _verify_ruler(preview, ppm)
     zone = cv2.perspectiveTransform(
         np.float32([[[LENS_ZONE_MM[0][0], LENS_ZONE_MM[0][1]],
                       [LENS_ZONE_MM[1][0], LENS_ZONE_MM[0][1]],
                       [LENS_ZONE_MM[1][0], LENS_ZONE_MM[1][1]],
-                      [LENS_ZONE_MM[0][0], LENS_ZONE_MM[1][1]]]]), to_px)[0]
+                      [LENS_ZONE_MM[0][0], LENS_ZONE_MM[1][1]]]]), canvas)[0]
     cv2.polylines(preview, [zone.astype(np.int32)], True, (46, 160, 67), max(2, size[0] // 400))
     ok, encoded = cv2.imencode(".jpg", cv2.cvtColor(preview, cv2.COLOR_RGB2BGR),
                                [cv2.IMWRITE_JPEG_QUALITY, 82])
@@ -172,6 +206,8 @@ def calibrate_sheet(image: Image.Image) -> SheetReady | SheetRetry:
         millimetres_per_pixel=round(1 / ppm, 5),
         source_to_sheet_mm=(to_mm / to_mm[2, 2]).tolist(),
         rectified_zone_corners_px=zone.tolist(),
+        ruler_length_mm=ruler_length_mm,
+        print_scale_ok=print_scale_ok,
         confidence=round(float(min(1.0, 0.45 + 0.18 * len(found))), 3),
         preview_width_px=int(size[0]),
         preview_height_px=int(size[1]),

@@ -62,6 +62,9 @@ def test_sheet_calibration_four_markers(seed):
     back = cv2.perspectiveTransform(src, to_mm)[0][0]
     assert back == pytest.approx([-20.0, -20.0], abs=1.0)
     assert abs(RULER_MM[1][0] - RULER_MM[0][0] - 100.0) < 1e-9
+    # Printed-scale self-check: the warped ruler must read 100 mm.
+    assert result.ruler_length_mm == pytest.approx(100.0, abs=1.5)
+    assert result.print_scale_ok is True
     assert result.preview_width_px > 500 and result.preview_height_px > 500
     assert result.preview_data_url.startswith("data:image/jpeg;base64,")
     assert len(result.rectified_zone_corners_px) == 4
