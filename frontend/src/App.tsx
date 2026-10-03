@@ -29,6 +29,7 @@ function App() {
   const [receipt, setReceipt] = useState<CaptureReceipt | null>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
+  const calibration = receipt?.calibration;
 
   const previewUrl = useMemo(
     () => (imageFile ? URL.createObjectURL(imageFile) : ""),
@@ -46,8 +47,8 @@ function App() {
     event.target.value = "";
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setError("Choose an original JPG, PNG, HEIC, or WebP image.");
+    if (!["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"].includes(file.type)) {
+      setError("Choose an original JPG, PNG, HEIC, HEIF, or WebP image.");
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -74,6 +75,7 @@ function App() {
 
     setIsSubmitting(true);
     setError("");
+    setReceipt(null);
     try {
       const response = await submitCapture(imageFile, captureMode, eye);
       setReceipt(response);
@@ -122,7 +124,7 @@ function App() {
         </section>
 
         <section className="capture-card">
-          <fieldset className="field-group">
+          <fieldset className="field-group" disabled={isSubmitting}>
             <legend>How is the lens positioned?</legend>
             <div className="choice-grid">
               <button
@@ -134,7 +136,7 @@ function App() {
                 <span className="radio-dot" />
                 <ScanLine size={26} />
                 <strong>Loose lens</strong>
-                <small>Measures the visible edge directly</small>
+                <small>Planned: measure the lens edge directly</small>
               </button>
               <button
                 className={`choice-card ${captureMode === "framed" ? "selected" : ""}`}
@@ -145,22 +147,24 @@ function App() {
                 <span className="radio-dot" />
                 <Glasses size={26} />
                 <strong>Inside a frame</strong>
-                <small>Uses an approximate 1.5 mm inset</small>
+                <small>Planned: approximate 1.5 mm rim inset</small>
               </button>
             </div>
           </fieldset>
 
-          <fieldset className="field-group compact">
+          <fieldset className="field-group compact" disabled={isSubmitting}>
             <legend>Which eye is this for?</legend>
             <div className="segmented-control">
               <button
                 type="button"
                 className={eye === "left" ? "active" : ""}
+                aria-pressed={eye === "left"}
                 onClick={() => { setEye("left"); setReceipt(null); }}
               >Left eye</button>
               <button
                 type="button"
                 className={eye === "right" ? "active" : ""}
+                aria-pressed={eye === "right"}
                 onClick={() => { setEye("right"); setReceipt(null); }}
               >Right eye</button>
             </div>
@@ -200,8 +204,10 @@ function App() {
               </div>
             ) : (
               <div className="preview-stage">
-                <img src={previewUrl} alt="Selected lens and reference card" />
-                <button className="replace-button" type="button" onClick={resetCapture}>
+                {imageFile.type === "image/heic" || imageFile.type === "image/heif" ? (
+                  <p className="preview-placeholder">HEIC/HEIF selected. The calibrated preview will appear after processing.</p>
+                ) : <img src={previewUrl} alt="Selected lens and reference card" />}
+                <button className="replace-button" type="button" disabled={isSubmitting} onClick={resetCapture}>
                   <RotateCcw size={17} /> Replace
                 </button>
                 <div className="file-summary">
@@ -211,12 +217,13 @@ function App() {
               </div>
             )}
 
-            <input ref={cameraInput} hidden type="file" accept="image/*" capture="environment" onChange={chooseImage} />
-            <input ref={galleryInput} hidden type="file" accept="image/*" onChange={chooseImage} />
+            <input ref={cameraInput} hidden disabled={isSubmitting} type="file" accept="image/*" capture="environment" onChange={chooseImage} />
+            <input ref={galleryInput} hidden disabled={isSubmitting} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={chooseImage} />
           </div>
 
           <ul className="checklist" aria-label="Photo checklist">
-            <li><Check size={16} /> The card is flat and all four corners are visible</li>
+            <li><Check size={16} /> One blank 85.60 × 53.98 mm card, with space around all four corners</li>
+            <li><Check size={16} /> Card and lens share a flat, plain contrasting surface; camera nearly overhead</li>
             <li><Check size={16} /> The full {captureMode === "framed" ? "frame" : "lens edge"} is inside the photo</li>
             <li><Check size={16} /> The image is sharp and has no strong glare</li>
           </ul>
@@ -224,20 +231,48 @@ function App() {
           {captureMode === "framed" && (
             <div className="notice">
               <ShieldCheck size={19} />
-              <p><strong>Approximation mode</strong>The next step will move the detected rim inward by 1.5 mm.</p>
+              <p><strong>Approximation mode</strong>Future lens processing will estimate the lens with a 1.5 mm inward rim offset. No rim is detected or offset yet.</p>
             </div>
           )}
 
           {error && <p className="error-message" role="alert">{error}</p>}
 
-          {receipt ? (
-            <div className="success-card" role="status">
-              <span><Check size={20} /></span>
-              <div>
-                <strong>Photo ready for measurement</strong>
-                <p>{receipt.width_px} × {receipt.height_px} px · {receipt.eye} eye · {receipt.capture_mode} mode</p>
-              </div>
+          {calibration?.status === "retry" && (
+            <div className="error-message" role="alert">
+              <strong>Retake photo — calibration incomplete</strong>
+              <p>{calibration.message}</p>
+              <button className="secondary-button" type="button" onClick={resetCapture}>Choose a new photo</button>
             </div>
+          )}
+
+          {calibration?.status === "calibrated" && receipt ? (
+            <section className="calibration-result" aria-label="Calibration result">
+              <div className="success-card" role="status">
+                <span><Check size={20} /></span>
+                <div>
+                  <strong>Reference card calibrated</strong>
+                  <p>{receipt.eye} eye · {receipt.capture_mode === "framed" ? "inside a frame (approximation mode)" : "loose lens"}</p>
+                </div>
+              </div>
+              <figure className="rectified-preview">
+                <div className="rectified-image">
+                  <img src={calibration.preview_data_url} alt="Top-down rectified photo with the reference card outlined; lens is not segmented" />
+                  <svg viewBox={`0 0 ${calibration.preview_width_px} ${calibration.preview_height_px}`} aria-hidden="true">
+                    <polygon points={calibration.rectified_card_corners_px.map(point => point.join(",")).join(" ")} />
+                    {calibration.rectified_card_corners_px.map(([x, y], index) => (
+                      <circle key={index} cx={x} cy={y} r={calibration.preview_width_px / 130} />
+                    ))}
+                  </svg>
+                </div>
+                <figcaption>Top-down preview · outline marks the detected reference card</figcaption>
+              </figure>
+              <dl className="calibration-details">
+                <div><dt>Reference card</dt><dd>85.60 × 53.98 mm</dd></div>
+                <div><dt>Preview scale</dt><dd>{calibration.millimetres_per_pixel.toFixed(4)} mm / pixel</dd></div>
+              </dl>
+              <p className="calibration-note">Calibration only. Lens segmentation and measurements (A, B and perimeter) are not available yet. Accuracy still needs validation with real photos.</p>
+              <button className="secondary-button" type="button" onClick={resetCapture}><RotateCcw size={17} /> Take another photo</button>
+            </section>
           ) : (
             <button
               className="continue-button"
@@ -245,13 +280,13 @@ function App() {
               disabled={!imageFile || isSubmitting}
               onClick={continueCapture}
             >
-              {isSubmitting ? "Checking image…" : "Continue to measurement"}
+              {isSubmitting ? "Calibrating reference card…" : calibration?.status === "retry" ? "Try calibration again" : "Calibrate reference card"}
               {!isSubmitting && <ChevronRight size={20} />}
             </button>
           )}
         </section>
 
-        <p className="privacy-note"><ShieldCheck size={15} /> This prototype validates your image without saving it.</p>
+        <p className="privacy-note"><ShieldCheck size={15} /> Photos are processed in memory and are not saved.</p>
       </main>
     </div>
   );

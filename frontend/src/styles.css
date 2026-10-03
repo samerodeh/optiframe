@@ -167,6 +167,23 @@ main { max-width: 760px; margin: 0 auto; padding: 4px 20px 48px; }
 .success-card p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
 .privacy-note { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 18px 0 0; color: #74807d; font-size: 11px; }
 
+button:disabled { cursor: not-allowed; opacity: .65; }
+.preview-placeholder { min-height: 180px; padding: 70px 20px 20px; color: var(--muted); font-size: 14px; }
+.calibration-result { display: grid; gap: 16px; }
+.rectified-preview { margin: 0; }
+.rectified-image { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+.rectified-image img { display: block; width: 100%; height: auto; }
+.rectified-image svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rectified-image polygon { fill: none; stroke: #087967; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.rectified-image circle { fill: #fff; stroke: #087967; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.rectified-preview figcaption, .calibration-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.rectified-preview figcaption { margin-top: 8px; }
+.calibration-note { margin: 0; }
+.calibration-details { margin: 0; display: grid; gap: 10px; font-size: 13px; }
+.calibration-details div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; }
+.calibration-details dt { color: var(--muted); }
+.calibration-details dd { margin: 0; font-weight: 700; }
+
 @media (max-width: 520px) {
   .topbar { height: 64px; padding: 0 16px; }
   main { padding: 2px 12px 34px; }

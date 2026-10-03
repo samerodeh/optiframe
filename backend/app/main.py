@@ -3,16 +3,22 @@ from __future__ import annotations
 from io import BytesIO
 from typing import Literal
 from uuid import uuid4
+import warnings
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
+
+from .calibration import CalibrationReady, CalibrationRetry, calibrate
+from .upload_limit import MAX_IMAGE_BYTES, UploadLimitMiddleware
 
 register_heif_opener()
 
-MAX_IMAGE_BYTES = 4 * 1024 * 1024
+MAX_IMAGE_PIXELS = 24_000_000
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP", "HEIF", "HEIC"}
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg",
     "image/png",
@@ -37,16 +43,18 @@ class CaptureReceipt(BaseModel):
     width_px: int
     height_px: int
     size_bytes: int
-    status: Literal["received"]
-    next_step: Literal["reference_detection"]
+    status: Literal["calibrated", "retry"]
+    next_step: Literal["lens_segmentation", "retry_capture"]
+    calibration: CalibrationReady | CalibrationRetry
 
 
 app = FastAPI(
     title="OptiFrame API",
-    version="0.1.0",
-    description="Image intake API for the OptiFrame mobile capture flow.",
+    version="0.2.0",
+    description="Image intake and reference-card calibration for OptiFrame.",
 )
 
+app.add_middleware(UploadLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -68,9 +76,10 @@ async def create_capture(
     eye: Eye = Form(...),
 ) -> CaptureReceipt:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
+        await image.close()
         raise HTTPException(
             status_code=415,
-            detail="Choose an original JPG, PNG, HEIC, or WebP image.",
+            detail="Choose an original JPG, PNG, HEIC, HEIF, or WebP image.",
         )
 
     image_bytes = await image.read(MAX_IMAGE_BYTES + 1)
@@ -78,18 +87,8 @@ async def create_capture(
     if len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=413, detail="The image must be 4 MB or smaller.")
 
-    try:
-        with Image.open(BytesIO(image_bytes)) as opened_image:
-            width_px, height_px = opened_image.size
-            opened_image.verify()
-    except (UnidentifiedImageError, OSError, ValueError) as exc:
-        raise HTTPException(status_code=400, detail="The uploaded file is not a valid image.") from exc
-
-    if width_px < 640 or height_px < 480:
-        raise HTTPException(
-            status_code=422,
-            detail="The image is too small for measurement. Use a photo of at least 640 × 480 pixels.",
-        )
+    # Decode and CPU-bound OpenCV work off the event loop. Images remain in memory.
+    width_px, height_px, calibration = await run_in_threadpool(process_image, image_bytes)
 
     return CaptureReceipt(
         capture_id=str(uuid4()),
@@ -99,6 +98,36 @@ async def create_capture(
         width_px=width_px,
         height_px=height_px,
         size_bytes=len(image_bytes),
-        status="received",
-        next_step="reference_detection",
+        status=calibration.status,
+        next_step="lens_segmentation" if calibration.status == "calibrated" else "retry_capture",
+        calibration=calibration,
     )
+
+
+def process_image(image_bytes: bytes) -> tuple[int, int, CalibrationReady | CalibrationRetry]:
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(image_bytes)) as opened:
+                if opened.format not in ALLOWED_IMAGE_FORMATS:
+                    raise HTTPException(status_code=415, detail="Choose an original JPG, PNG, HEIC, HEIF, or WebP image.")
+                if opened.width * opened.height > MAX_IMAGE_PIXELS:
+                    raise HTTPException(status_code=422, detail="This image has too many pixels. Use a photo of 24 megapixels or fewer.")
+                opened.verify()
+            with Image.open(BytesIO(image_bytes)) as opened:
+                oriented = ImageOps.exif_transpose(opened)
+                width, height = oriented.size
+                if min(width, height) < 480 or max(width, height) < 640:
+                    raise HTTPException(status_code=422, detail="The image is too small for calibration. Use at least 640 × 480 pixels (or portrait equivalent).")
+                # Composite transparency consistently; never treat invisible RGB as a card.
+                if oriented.mode in ("RGBA", "LA", "P"):
+                    rgba = oriented.convert("RGBA")
+                    rgb = Image.new("RGB", oriented.size, "white")
+                    rgb.paste(rgba, mask=rgba.getchannel("A"))
+                else:
+                    rgb = oriented.convert("RGB")
+                return width, height, calibrate(rgb)
+    except (Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
+        raise HTTPException(status_code=422, detail="This image has too many pixels. Use a photo of 24 megapixels or fewer.") from exc
+    except (UnidentifiedImageError, OSError, ValueError, SyntaxError) as exc:
+        raise HTTPException(status_code=400, detail="The uploaded file is not a valid image. Retake it or choose another original.") from exc
