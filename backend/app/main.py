@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from .calibration import CalibrationReady, CalibrationRetry, calibrate
+from .measurement import LensMeasurement, MeasurementRetry, measure_lens
 from .upload_limit import MAX_IMAGE_BYTES, UploadLimitMiddleware
 
 register_heif_opener()
@@ -43,15 +44,16 @@ class CaptureReceipt(BaseModel):
     width_px: int
     height_px: int
     size_bytes: int
-    status: Literal["calibrated", "retry"]
-    next_step: Literal["lens_segmentation", "retry_capture"]
+    status: Literal["measured", "retry"]
+    next_step: Literal["capture_other_eye", "retry_capture"]
     calibration: CalibrationReady | CalibrationRetry
+    measurement: LensMeasurement | MeasurementRetry | None = None
 
 
 app = FastAPI(
     title="OptiFrame API",
-    version="0.2.0",
-    description="Image intake and reference-card calibration for OptiFrame.",
+    version="0.4.0",
+    description="Reference-card calibration and ML-assisted lens measurement for OptiFrame.",
 )
 
 app.add_middleware(UploadLimitMiddleware)
@@ -88,7 +90,10 @@ async def create_capture(
         raise HTTPException(status_code=413, detail="The image must be 4 MB or smaller.")
 
     # Decode and CPU-bound OpenCV work off the event loop. Images remain in memory.
-    width_px, height_px, calibration = await run_in_threadpool(process_image, image_bytes)
+    width_px, height_px, calibration, measurement = await run_in_threadpool(
+        process_image, image_bytes, capture_mode
+    )
+    measured = measurement is not None and measurement.status == "measured"
 
     return CaptureReceipt(
         capture_id=str(uuid4()),
@@ -98,13 +103,16 @@ async def create_capture(
         width_px=width_px,
         height_px=height_px,
         size_bytes=len(image_bytes),
-        status=calibration.status,
-        next_step="lens_segmentation" if calibration.status == "calibrated" else "retry_capture",
+        status="measured" if measured else "retry",
+        next_step="capture_other_eye" if measured else "retry_capture",
         calibration=calibration,
+        measurement=measurement,
     )
 
 
-def process_image(image_bytes: bytes) -> tuple[int, int, CalibrationReady | CalibrationRetry]:
+def process_image(
+    image_bytes: bytes, capture_mode: CaptureMode
+) -> tuple[int, int, CalibrationReady | CalibrationRetry, LensMeasurement | MeasurementRetry | None]:
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -126,7 +134,12 @@ def process_image(image_bytes: bytes) -> tuple[int, int, CalibrationReady | Cali
                     rgb.paste(rgba, mask=rgba.getchannel("A"))
                 else:
                     rgb = oriented.convert("RGB")
-                return width, height, calibrate(rgb)
+                calibration = calibrate(rgb)
+                measurement = (
+                    measure_lens(rgb, calibration, capture_mode)
+                    if calibration.status == "calibrated" else None
+                )
+                return width, height, calibration, measurement
     except (Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise HTTPException(status_code=422, detail="This image has too many pixels. Use a photo of 24 megapixels or fewer.") from exc
     except (UnidentifiedImageError, OSError, ValueError, SyntaxError) as exc:

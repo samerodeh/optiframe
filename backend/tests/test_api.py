@@ -24,10 +24,12 @@ def test_success_preserves_selections(mode, eye):
     assert response.status_code == 200
     result = response.json()
     assert (result["capture_mode"], result["eye"]) == (mode, eye)
-    assert result["status"] == "calibrated"
-    assert result["next_step"] == "lens_segmentation"
+    assert result["status"] == "measured"
+    assert result["next_step"] == "capture_other_eye"
     assert len(result["calibration"]["corners_px"]) == 4
-    assert "lens_contour" not in result
+    expected_width = 40 if mode == "loose" else 37
+    assert result["measurement"]["width_a_mm"] == pytest.approx(expected_width, abs=.75)
+    assert result["measurement"]["approximate"] is (mode == "framed")
     assert len(response.content) < 4_000_000
 
 
@@ -39,15 +41,27 @@ def test_retry_is_structured_and_preserves_selections():
     assert result["status"] == "retry"
     assert result["next_step"] == "retry_capture"
     assert result["calibration"]["reason"] == "card_missing"
+    assert result["measurement"] is None
     assert "preview_data_url" not in result["calibration"]
     assert "retake" in result["calibration"]["message"]
+
+
+def test_measurement_retry_keeps_successful_calibration():
+    response = upload(scene(lens=False)[0])
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "retry"
+    assert result["next_step"] == "retry_capture"
+    assert result["calibration"]["status"] == "calibrated"
+    assert result["measurement"]["status"] == "retry"
+    assert result["measurement"]["reason"] == "lens_missing"
 
 
 @pytest.mark.parametrize("format,mime", [("JPEG", "image/jpeg"), ("WEBP", "image/webp"), ("HEIF", "image/heif"), ("HEIF", "image/heic")])
 def test_supported_formats(format, mime):
     response = upload(scene()[0], format=format, mime=mime)
     assert response.status_code == 200
-    assert response.json()["status"] == "calibrated"
+    assert response.json()["status"] == "measured"
 
 
 def test_exif_orientation_uses_display_coordinates():
@@ -58,7 +72,7 @@ def test_exif_orientation_uses_display_coordinates():
     assert response.status_code == 200
     result = response.json()
     assert (result["width_px"], result["height_px"]) == (1100, 1400)
-    assert result["status"] == "calibrated"
+    assert result["status"] == "measured"
     corners = result["calibration"]["corners_px"]
     assert all(0 <= x < 1100 and 0 <= y < 1400 for x, y in corners)
 

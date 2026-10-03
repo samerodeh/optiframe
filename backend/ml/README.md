@@ -1,16 +1,24 @@
 # ML workspace
 
-No model is trained or used yet. Reference-card detection and perspective calibration
-are deterministic OpenCV processing in `app/calibration.py`.
+Tiny UNet lens segmentation on the rectified preview plane.
 
-The next milestone will add:
+- `ml/dataset.py`: synthetic 256x256 rectified-plane generator (oval, round,
+  wayfarer, aviator, cat-eye + transparency/glare/shadow/blur). No personal
+  data, CC0.
+- `ml/unet.py`: TinyUNet (~0.5M params).
+- `ml/train.py`: CPU training + ONNX export to `ml/lens_unet.onnx`.
+- `app/ml_segment.py`: onnxruntime CPU inference. Missing model file means
+  automatic fallback to the deterministic baseline.
+- `app/measurement.py`: tries `ml_lens_mask` / `ml_rim_inset` first, then
+  `direct_lens_contour` / `outer_rim_inset`.
 
-1. loose-lens and framed-rim contour extraction selected by `capture_mode`;
-2. the clearly labeled approximate 1.5 mm inward offset for framed mode;
-3. A, B and perimeter from the calibrated scale;
-4. a versioned training dataset and evaluation script with sources and licenses.
+Train (from `backend/`):
 
-The web interface already sends the two inputs needed to route that logic:
+```powershell
+.venv\Scripts\python.exe -m ml.train --samples 800 --epochs 18 --out ml/lens_unet.onnx
+```
 
-- `capture_mode`: `loose` or `framed`;
-- `eye`: `left` or `right`.
+Fine-tuning on real photos: add annotated rectified masks under
+`ml/data/real/` (source photo + PNG mask + mm scale) and extend
+`ml/train.py` with a mixed sampler. Validate against known physical
+dimensions of the two test lenses before claiming 1 mm accuracy.

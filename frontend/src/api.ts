@@ -21,6 +21,26 @@ export interface CalibrationRetry {
   message: string;
 }
 
+export interface LensMeasurement {
+  status: "measured";
+  method: "direct_lens_contour" | "outer_rim_inset" | "ml_lens_mask" | "ml_rim_inset";
+  approximate: boolean;
+  inset_mm: number;
+  width_a_mm: number;
+  height_b_mm: number;
+  perimeter_mm: number;
+  confidence: number;
+  contour_px: [number, number][];
+  contour_mm: [number, number][];
+  detected_outer_contour_px: [number, number][] | null;
+}
+
+export interface MeasurementRetry {
+  status: "retry";
+  reason: "lens_missing" | "lens_cropped" | "lens_blurry" | "ambiguous_contour" | "low_confidence";
+  message: string;
+}
+
 export interface CaptureReceipt {
   capture_id: string;
   capture_mode: CaptureMode;
@@ -29,9 +49,10 @@ export interface CaptureReceipt {
   width_px: number;
   height_px: number;
   size_bytes: number;
-  status: "calibrated" | "retry";
-  next_step: "lens_segmentation" | "retry_capture";
+  status: "measured" | "retry";
+  next_step: "capture_other_eye" | "retry_capture";
   calibration: CalibrationReady | CalibrationRetry;
+  measurement: LensMeasurement | MeasurementRetry | null;
 }
 
 export async function submitCapture(
@@ -57,13 +78,13 @@ export async function submitCapture(
       const payload = (await response.json().catch(() => null)) as
         | { detail?: unknown }
         | null;
-      throw new Error(typeof payload?.detail === "string" ? payload.detail : "The image could not be calibrated. Please try again.");
+      throw new Error(typeof payload?.detail === "string" ? payload.detail : "The image could not be measured. Please try again.");
     }
 
     return await response.json() as CaptureReceipt;
   } catch (error) {
     if (controller.signal.aborted) {
-      throw new Error("Calibration took too long. Check your connection and try again.");
+      throw new Error("Measurement took too long. Check your connection and try again.");
     }
     throw error;
   } finally {

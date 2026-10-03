@@ -9,3 +9,5 @@ __pycache__/
 .venv/
 .env
 .pytest_cache/
+ml/*.pt
+ml/smoke*.onnx
